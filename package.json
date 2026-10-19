@@ -1,0 +1,13 @@
+{
+  "name": "mentor-mode",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Turns your coding agent into a mentor: it teaches with a hint ladder and is blocked from writing your code.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build:portable": "node --experimental-strip-types --no-warnings scripts/build-portable.ts",
+    "test": "claude plugin test .",
+    "validate": "claude plugin validate ."
+  }
+}

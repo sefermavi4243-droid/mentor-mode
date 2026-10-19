@@ -1,0 +1,8 @@
+{
+  "name": "mentor-mode",
+  "version": "0.1.0",
+  "description": "Turns your coding agent into a mentor: it teaches with a hint ladder and is blocked from writing your code.",
+  "author": { "name": "sefermavi4243-droid" },
+  "license": "MIT",
+  "keywords": ["learning", "education", "mentor", "socratic", "claude-code"]
+}

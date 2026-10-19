@@ -1,0 +1,14 @@
+{
+  "name": "mentor-mode",
+  "description": "Turn your coding agent into a mentor that teaches instead of writing your code.",
+  "owner": {
+    "name": "sefermavi4243-droid"
+  },
+  "plugins": [
+    {
+      "name": "mentor-mode",
+      "source": "./",
+      "description": "Turns your coding agent into a mentor: it teaches with a hint ladder and is blocked from writing your code."
+    }
+  ]
+}
