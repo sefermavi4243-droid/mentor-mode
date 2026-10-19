@@ -54,7 +54,30 @@ use the strongest model there is, as a teacher instead of a ghostwriter.
 | **Learning journal** | The agent keeps `.mentor/journal.md`: what you struggled with, what unlocked it, and a recall question for each entry. |
 | **Spaced recall** | Next session it opens with a recall question from your journal, before anything else. |
 | **Exams** | `/mentor exam src/parser.ts` asks three questions about the code (what it does, an edge case, a changed requirement) and grades each answer. Works great on code an AI wrote for you last week. |
+| **Katas from your own repo** | `/mentor kata src/utils` picks a real function from your codebase and turns it into an exercise in `.mentor/kata/`: a README, an empty stub and tests checked against the original. You reimplement it; the original stays hidden until you are done. The fastest way to learn a codebase you did not write. |
+| **Weekly card** | `/mentor wrapped` turns your week into a card you can share: problems solved on your own, independence score, streak, the concepts you learned. |
 | **Any language** | It answers in the language you write in. |
+
+## Your week, on one card
+
+`/mentor wrapped` writes a self-contained 1200x630 card, sized for LinkedIn and X. Open it in a browser and take a screenshot.
+
+![An example weekly card: 7 problems solved on my own, 88% independence, a 7-day streak](docs/wrapped-example.png)
+
+<sub>Example data. Your card is built from your own history and journal.</sub>
+
+### How a kata works
+
+```
+> /mentor kata src/utils
+Building a kata from your own codebase. You write the solution; the tests tell you when it works.
+
+  Your kata is in .mentor/kata/chunk/. Run it with: node .mentor/kata/chunk/test.js
+  When the tests pass, run /mentor done.
+```
+
+The agent writes the stub once. After that, `solution.js` is yours: the guard denies the agent any
+further edit to it, so it cannot solve the kata for you.
 
 ## Install
 
@@ -86,6 +109,8 @@ plain words (`hint`, `reveal`, `done`, `exam`). The write guard and the scoreboa
 | `/mentor reveal` | Full solution, walked through line by line. Counts as a reveal. |
 | `/mentor done` | Mark the problem solved; resets the ladder |
 | `/mentor exam [path]` | Three questions, graded |
+| `/mentor kata [path]` | Turn a real function of your repo into an exercise |
+| `/mentor wrapped` | Write this week's card to `.mentor/wrapped.html` (works with mentor mode off too) |
 | `/mentor status` | Scoreboard |
 | `/mentor off` | Back to a normal agent |
 
@@ -99,10 +124,11 @@ got there, not only where they ended up.
 
 `mentor-mode` is a Claude Code hooks module ([`hooks/register.ts`](hooks/register.ts)):
 
-- a `tool.call` guard on `Write`, `Edit`, `NotebookEdit`, `Bash` and `PowerShell`;
+- a `tool.call` guard on `Write`, `Edit`, `NotebookEdit`, `Bash` and `PowerShell`, which also keeps kata solutions for the learner;
 - a `prompt.submit` hook that hands the model the teaching contract
   ([`hooks/teaching.ts`](hooks/teaching.ts)) when it changes, and a one-line reminder otherwise;
-- the `/mentor` command, with progress kept in the plugin's store, per project.
+- the `/mentor` command, with progress and a dated activity history kept in the plugin's store, per project;
+- [`hooks/wrapped.ts`](hooks/wrapped.ts), which turns that history and the journal into the weekly card.
 
 `portable/AGENTS.md` is generated from the same `teaching.ts`, so the two never drift:
 
@@ -126,15 +152,16 @@ it is your call, made on purpose.
 ## Contributing
 
 Ideas that would make this better: more styles (a "rubber duck" that only listens, an
-"interviewer" for practice), exercises generated from your own repo, a weekly progress summary from the
-journal. Issues and pull requests are welcome. Please write them yourself.
+"interviewer" for practice), real spaced repetition for recall questions, a classroom mode a teacher can
+lock on. Issues and pull requests are welcome. Please write them yourself.
 
 ## Türkçe
 
 `mentor-mode`, Claude Code'u bir mentora dönüştürür: kodunu okur, testlerini çalıştırır, doğru soruyu
 sorar ama **senin yerine kod yazamaz**. İpuçları dört basamakta gelir, ne zaman çıkacağına sen karar
 verirsin. Öğrendiklerin `.mentor/journal.md` dosyasına yazılır, bir sonraki oturum bir hatırlatma
-sorusuyla başlar. Hangi dilde yazarsan o dilde cevap verir.
+sorusuyla başlar. `/mentor kata` kendi projendeki gerçek bir fonksiyonu alıştırmaya çevirir,
+`/mentor wrapped` haftanı paylaşılabilir bir karta döker. Hangi dilde yazarsan o dilde cevap verir.
 
 ## License
 
