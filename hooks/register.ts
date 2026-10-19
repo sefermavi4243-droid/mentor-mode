@@ -80,13 +80,15 @@ function scoreboard(p: Progress): string {
 // apply; it works whether mentor mode is on or off.
 async function wrapped($: EngineInterface, p: Progress): Promise<string> {
   const root = await $.session.root()
-  const journal = await $.fs.read(`${root}/.mentor/journal.md`).then(String, () => '')
+  // Spell the path the way the platform does, so it reads as one clickable path.
+  const sep = root.includes('\\') ? '\\' : '/'
+  const journal = await $.fs.read([root, '.mentor', 'journal.md'].join(sep)).then(String, () => '')
   const week = summarize(p.history, parseJournal(journal), await $.clock.now())
-  const path = `${root}/.mentor/wrapped.html`
+  const path = [root, '.mentor', 'wrapped.html'].join(sep)
   await $.fs.write(path, renderCard(week, REPO))
   const independence = week.independence === null ? '' : `, ${week.independence}% independence`
   return [
-    `Your week (${week.from} to ${week.to}): ${week.solved} solved on your own, ${week.hints} hints, ${week.reveals} reveals${independence}, ${week.streak}-day streak.`,
+    `Your week (${week.from} to ${week.to}): ${week.solved} solved on your own, ${week.katas} katas, ${week.exams} exams, ${week.hints} hints, ${week.reveals} reveals${independence}, ${week.streak}-day streak.`,
     `Card written to ${path}`,
     'Open it in a browser and take a screenshot to share it.',
   ].join('\n')
