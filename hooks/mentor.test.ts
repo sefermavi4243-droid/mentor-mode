@@ -27,11 +27,23 @@ function world(on: On, entries: Record<string, unknown> = {}) {
     notes.push(...(e.context ?? []))
     return { text: e.text }
   })
+  const files: Record<string, string> = {}
+  // The engine hands paths over in the platform's own form.
+  const slash = (path: string) => path.replace(/\\/g, '/')
+  on('fs.read', ($, e) => {
+    const text = files[slash(e.path)]
+    if (text === undefined) throw new Error(`ENOENT: ${e.path}`)
+    return { value: text }
+  })
+  on('fs.write', ($, e) => {
+    files[slash(e.path)] = e.text
+    return { value: undefined }
+  })
   on('tool.call', ($, e) => {
     ran.push(e.tool)
     return { result: 'ok' }
   })
-  return { submitted, notes, ran, clock, store }
+  return { submitted, notes, ran, clock, store, files }
 }
 
 // The kit fills in what the engine stamps (origin, presentation, wait).
@@ -103,6 +115,23 @@ describe('/mentor', () => {
     await mentor($, 'reveal')
     const { text } = await mentor($, 'done')
     expect(text).toContain('does not count')
+  })
+})
+
+describe('/mentor wrapped', () => {
+  test('writes the weekly card next to the journal, even while off', async ($, on) => {
+    const { clock, files } = world(on)
+    await clock.set(new Date(2026, 9, 20, 12).getTime())
+    files[`${ROOT}/.mentor/journal.md`] = '## 2026-10-20 - loop invariants\n'
+    const { text } = await mentor($, 'wrapped')
+    expect(text).toContain('0 solved on your own')
+    expect(files[`${ROOT}/.mentor/wrapped.html`]).toContain('loop invariants')
+  })
+
+  test('works before there is any journal', async ($, on) => {
+    const { files } = world(on, ON)
+    await mentor($, 'wrapped')
+    expect(files[`${ROOT}/.mentor/wrapped.html`]).toContain('the journal fills this in')
   })
 })
 

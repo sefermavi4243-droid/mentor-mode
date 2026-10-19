@@ -3,6 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 import { contract, DEFAULT_LEVEL, EXAM, LEVELS, REVEAL, RUNGS } from './teaching'
 import type { Level } from './teaching'
 import { isMentorPath, writesFiles } from './guard'
+import { parseJournal, renderCard, summarize } from './wrapped'
 import type { Activity } from './wrapped'
 
 type Progress = {
@@ -24,8 +25,10 @@ async function record($: EngineInterface, p: Progress, kind: Activity['kind']): 
   return [...p.history, { at: await $.clock.now(), kind }].slice(-HISTORY_LIMIT)
 }
 
+const REPO = 'github.com/sefermavi4243-droid/mentor-mode'
+
 const USAGE = [
-  'Usage: /mentor [on|off|guide|socratic|reviewer|strict|hint|reveal|done|exam [path]|status]',
+  'Usage: /mentor [on|off|guide|socratic|reviewer|strict|hint|reveal|done|exam [path]|wrapped|status]',
   '',
   ...Object.entries(LEVELS).map(([name, { summary }]) => `  ${name.padEnd(9)} ${summary}`),
 ].join('\n')
@@ -73,6 +76,22 @@ function scoreboard(p: Progress): string {
   ].join('\n')
 }
 
+// The card is the plugin's own write, not the agent's, so the guard does not
+// apply; it works whether mentor mode is on or off.
+async function wrapped($: EngineInterface, p: Progress): Promise<string> {
+  const root = await $.session.root()
+  const journal = await $.fs.read(`${root}/.mentor/journal.md`).then(String, () => '')
+  const week = summarize(p.history, parseJournal(journal), await $.clock.now())
+  const path = `${root}/.mentor/wrapped.html`
+  await $.fs.write(path, renderCard(week, REPO))
+  const independence = week.independence === null ? '' : `, ${week.independence}% independence`
+  return [
+    `Your week (${week.from} to ${week.to}): ${week.solved} solved on your own, ${week.hints} hints, ${week.reveals} reveals${independence}, ${week.streak}-day streak.`,
+    `Card written to ${path}`,
+    'Open it in a browser and take a screenshot to share it.',
+  ].join('\n')
+}
+
 const BLOCKED =
   'mentor-mode: the learner writes their own code while mentor mode is on. ' +
   'Do not retry this through another tool or a shell command. ' +
@@ -86,7 +105,7 @@ export const register: Register = on => {
     await $.command.register({
       name: 'mentor',
       description: 'Learn by doing: the agent teaches instead of writing your code',
-      argumentHint: '[on|off|guide|socratic|reviewer|strict|hint|reveal|done|exam|status]',
+      argumentHint: '[on|off|guide|socratic|reviewer|strict|hint|reveal|done|exam|wrapped|status]',
     })
     showStatus($, await load($))
     return next(e)
@@ -112,6 +131,7 @@ export const register: Register = on => {
       return { text: 'Mentor mode is off. The agent can write code again.' }
     }
     if (verb === 'status') return { text: scoreboard(p) }
+    if (verb === 'wrapped') return { text: await wrapped($, p) }
     if (!p.isOn) return { text: `Mentor mode is off. Run /mentor first.\n\n${USAGE}` }
 
     if (verb === 'hint') {
