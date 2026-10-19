@@ -17,10 +17,11 @@ const WRITERS = [
   />/, // any remaining redirect
   /\btee\b/,
   /\b(sed|perl)\b[^|;&]*\s-i/,
-  /\b(cp|mv|install|patch|truncate|dd)\s/,
+  /\b(cp|mv|install|patch|truncate|dd|rm|rmdir|unlink|del|erase|rd)\s/,
   /\bgit\s+(apply|am|checkout\s+--|restore|stash\s+pop|cherry-pick|merge|rebase)\b/,
-  /\b(Set-Content|Add-Content|Out-File|New-Item|Copy-Item|Move-Item|Rename-Item)\b/i,
+  /\b(Set-Content|Add-Content|Clear-Content|Out-File|New-Item|Copy-Item|Move-Item|Rename-Item|Remove-Item)\b/i,
   /\[IO\.File\]::Write/i,
+  /\s--(write|fix)\b/, // formatters and linters rewriting files (prettier, eslint, ruff)
   /\b(python|python3|node|ruby|perl)\s+-(c|e)\b/, // inline scripts can write anything
 ]
 

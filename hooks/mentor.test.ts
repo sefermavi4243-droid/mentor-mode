@@ -162,6 +162,12 @@ describe('the shell heuristic', () => {
     expect(writesFiles('Set-Content -Path x.js -Value 1')).toBe(true)
     expect(writesFiles('python -c "open(\'x\',\'w\')"')).toBe(true)
     expect(writesFiles('git apply fix.patch')).toBe(true)
+    expect(writesFiles('rm -f src/app.ts')).toBe(true)
+    expect(writesFiles('Remove-Item src\\app.ts')).toBe(true)
+    expect(writesFiles('git rm --cached x')).toBe(true)
+    expect(writesFiles('npx prettier --write src')).toBe(true)
+    expect(writesFiles('npx eslint --fix .')).toBe(true)
+    expect(writesFiles('npx eslint .')).toBe(false)
   })
 
   test('knows the mentor folder on any platform', () => {
