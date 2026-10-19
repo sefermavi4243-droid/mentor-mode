@@ -3,10 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 import { contract, DEFAULT_LEVEL, EXAM, LEVELS, REVEAL, RUNGS } from './teaching'
 import type { Level } from './teaching'
 import { isMentorPath, writesFiles } from './guard'
-
-export type ActivityKind = 'hint' | 'reveal' | 'solved' | 'exam'
-
-export type Activity = { at: number; kind: ActivityKind }
+import type { Activity } from './wrapped'
 
 type Progress = {
   isOn: boolean
@@ -23,7 +20,7 @@ const OFF: Progress = { isOn: false, level: DEFAULT_LEVEL, rung: 0, hints: 0, re
 // Enough for months of daily use; the store holds 4 MiB in all.
 const HISTORY_LIMIT = 2000
 
-async function record($: EngineInterface, p: Progress, kind: ActivityKind): Promise<Activity[]> {
+async function record($: EngineInterface, p: Progress, kind: Activity['kind']): Promise<Activity[]> {
   return [...p.history, { at: await $.clock.now(), kind }].slice(-HISTORY_LIMIT)
 }
 
