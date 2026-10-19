@@ -5,6 +5,11 @@ export function isMentorPath(path: string): boolean {
   return /(^|\/)\.mentor(\/|$)/.test(path.replace(/\\/g, '/'))
 }
 
+// A kata's solution file is the agent's to create and the learner's to fill.
+export function isKataSolution(path: string): boolean {
+  return /(^|\/)\.mentor\/kata\/[^/]+\/solution\.[^/]+$/.test(path.replace(/\\/g, '/'))
+}
+
 // Redirects to nowhere are harmless and very common in read-only commands.
 const HARMLESS = [
   /\d?>>?\s*\/dev\/null/g,

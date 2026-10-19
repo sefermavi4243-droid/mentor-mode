@@ -35,6 +35,11 @@ function world(on: On, entries: Record<string, unknown> = {}) {
     if (text === undefined) throw new Error(`ENOENT: ${e.path}`)
     return { value: text }
   })
+  on('fs.stat', ($, e) => {
+    const text = files[slash(e.path)]
+    if (text === undefined) throw new Error(`ENOENT: ${e.path}`)
+    return { value: { kind: 'file', size: text.length, mtimeMs: 0, isLink: false } }
+  })
   on('fs.write', ($, e) => {
     files[slash(e.path)] = e.text
     return { value: undefined }
@@ -66,6 +71,16 @@ describe('the write guard', () => {
     const { ran } = world(on, ON)
     await $.tool.call({ tool: 'Write', file_path: '.mentor/journal.md', content: '## today' })
     expect(ran).toEqual(['Write'])
+  })
+
+  test('lets the agent create a kata stub once, then keeps it for the learner', async ($, on) => {
+    const { ran, files } = world(on, ON)
+    const stub = `${ROOT}/.mentor/kata/clamp/solution.js`
+    await $.tool.call({ tool: 'Write', file_path: stub, content: 'throw new Error("not implemented")' })
+    files[stub] = 'the learner is working here'
+    const done = await $.tool.call({ tool: 'Edit', file_path: stub, old_string: 'a', new_string: 'b' })
+    expect(ran).toEqual(['Write'])
+    expect(done.deny ?? done.text).toContain('belongs to the learner')
   })
 
   test('blocks shell redirects into files but not read-only commands', async ($, on) => {

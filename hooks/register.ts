@@ -2,7 +2,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { contract, DEFAULT_LEVEL, EXAM, KATA, LEVELS, REVEAL, RUNGS } from './teaching'
 import type { Level } from './teaching'
-import { isMentorPath, writesFiles } from './guard'
+import { isKataSolution, isMentorPath, writesFiles } from './guard'
 import { parseJournal, renderCard, summarize } from './wrapped'
 import type { Activity } from './wrapped'
 
@@ -98,6 +98,10 @@ const BLOCKED =
   'Guide them to make the change themselves, at the current hint rung. ' +
   'You may write inside .mentor/ only. (The learner can run /mentor off to stop.)'
 
+const KATA_BLOCKED =
+  'mentor-mode: this kata solution belongs to the learner now. Do not edit it or write it another way. ' +
+  'Help them at the current hint rung instead.'
+
 export const register: Register = on => {
   let lastSent = ''
 
@@ -192,7 +196,11 @@ export const register: Register = on => {
   on('tool.call', { tool: /^(Write|Edit)$/ }, async ($, e, next) => {
     const p = await load($)
     const path = (e as { file_path?: string }).file_path ?? ''
-    return p.isOn && !isMentorPath(path) ? { deny: BLOCKED } : next(e)
+    if (!p.isOn) return next(e)
+    if (!isMentorPath(path)) return { deny: BLOCKED }
+    // The stub may be written once; after that the file is the learner's.
+    const exists = await $.fs.stat(path).then(() => true, () => false)
+    return isKataSolution(path) && exists ? { deny: KATA_BLOCKED } : next(e)
   }).catch(($, e, next) => (next.called ? next(e) : { deny: 'mentor-mode: its guard failed.' }))
 
   on('tool.call', { tool: 'NotebookEdit' }, async ($, e, next) => {
