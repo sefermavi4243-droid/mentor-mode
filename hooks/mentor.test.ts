@@ -110,6 +110,17 @@ describe('/mentor', () => {
     expect(saved.history[0]?.at).toBe(Date.UTC(2026, 9, 20))
   })
 
+  test('builds a kata from the codebase and starts a fresh ladder', async ($, on) => {
+    const { submitted, clock, store } = world(on, { [`project:${ROOT}`]: { isOn: true, level: 'socratic', rung: 3 } })
+    await mentor($, 'kata src/utils')
+    await clock.advance(1)
+    expect(submitted[0]).toContain('taken from src/utils')
+    expect(submitted[0]).toContain('KATA_IMPL')
+    const saved = store[`project:${ROOT}`] as { rung: number; history: { kind: string }[] }
+    expect(saved.rung).toBe(0)
+    expect(saved.history.map(a => a.kind)).toEqual(['kata'])
+  })
+
   test('a solved problem counts only without a reveal', async ($, on) => {
     world(on, ON)
     await mentor($, 'reveal')

@@ -100,6 +100,18 @@ export const EXAM = (target: string) => [
   'Append the result to .mentor/journal.md as an "exam" entry.',
 ].join('\n')
 
+export const KATA = (target: string) => [
+  `Set up a kata: an exercise made from a real function in this codebase${target ? `, taken from ${target}` : ''}.`,
+  '1. Pick one exported function of 10 to 40 lines with clear inputs and outputs and few dependencies. Prefer one that teaches a concept worth knowing over trivial glue code.',
+  '2. Create .mentor/kata/<short-name>/ holding:',
+  '   - README.md: what the function must do, its signature, two or three input/output examples and its edge cases. Nothing about how to do it.',
+  '   - solution.<ext>: the same signature, with a body that only throws "not implemented".',
+  '   - a test file covering normal cases and at least two edge cases, using the project\'s test runner, or the language\'s built-in assert if there is none. It loads the implementation from the path in the KATA_IMPL environment variable, defaulting to ./solution.',
+  '3. Check the tests before handing them over: run them once with KATA_IMPL set to the original function\'s file (they must pass) and once without it (they must fail with "not implemented"). Fix the tests, not the original, until both hold.',
+  '4. Tell the learner, in three short lines: the folder, the one command that runs the tests, and that /mentor done marks the kata solved. Do not say where the original lives and do not show it.',
+  'From now on solution.<ext> belongs to the learner: never edit it. While they work, help only at the current hint rung. When they finish, show where the original is and compare the two in a few lines, then add a "kata" entry to .mentor/journal.md.',
+].join('\n')
+
 export const REVEAL = [
   'The learner ran /mentor reveal. You may now show a full solution to the problem they are working on.',
   'Show it, then walk through it line by line, asking after each important block: "why is this here?"',

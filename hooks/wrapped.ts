@@ -1,7 +1,7 @@
 // /mentor wrapped: a week of learning as one shareable HTML card, built from
 // the plugin's activity history and the journal the agent keeps.
 
-export type Activity = { at: number; kind: 'hint' | 'reveal' | 'solved' | 'exam' }
+export type Activity = { at: number; kind: 'hint' | 'reveal' | 'solved' | 'exam' | 'kata' }
 
 export type JournalEntry = { date: string; title: string; isExam: boolean; isRevealed: boolean }
 

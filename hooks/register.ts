@@ -1,6 +1,6 @@
 import type { EngineInterface, Register } from 'claude-code'
 
-import { contract, DEFAULT_LEVEL, EXAM, LEVELS, REVEAL, RUNGS } from './teaching'
+import { contract, DEFAULT_LEVEL, EXAM, KATA, LEVELS, REVEAL, RUNGS } from './teaching'
 import type { Level } from './teaching'
 import { isMentorPath, writesFiles } from './guard'
 import { parseJournal, renderCard, summarize } from './wrapped'
@@ -28,7 +28,7 @@ async function record($: EngineInterface, p: Progress, kind: Activity['kind']): 
 const REPO = 'github.com/sefermavi4243-droid/mentor-mode'
 
 const USAGE = [
-  'Usage: /mentor [on|off|guide|socratic|reviewer|strict|hint|reveal|done|exam [path]|wrapped|status]',
+  'Usage: /mentor [on|off|guide|socratic|reviewer|strict|hint|reveal|done|exam [path]|kata [path]|wrapped|status]',
   '',
   ...Object.entries(LEVELS).map(([name, { summary }]) => `  ${name.padEnd(9)} ${summary}`),
 ].join('\n')
@@ -105,7 +105,7 @@ export const register: Register = on => {
     await $.command.register({
       name: 'mentor',
       description: 'Learn by doing: the agent teaches instead of writing your code',
-      argumentHint: '[on|off|guide|socratic|reviewer|strict|hint|reveal|done|exam|wrapped|status]',
+      argumentHint: '[on|off|guide|socratic|reviewer|strict|hint|reveal|done|exam|kata|wrapped|status]',
     })
     showStatus($, await load($))
     return next(e)
@@ -161,6 +161,11 @@ export const register: Register = on => {
           ? `Solved on your own: ${next.solved}. Hint ladder reset.`
           : 'Done. It used a revealed solution, so it does not count as solved on your own. Hint ladder reset.',
       }
+    }
+    if (verb === 'kata') {
+      await save($, { ...p, rung: 0, history: await record($, p, 'kata') })
+      ask(KATA(rest.join(' ')))
+      return { text: 'Building a kata from your own codebase. You write the solution; the tests tell you when it works.' }
     }
     if (verb === 'exam') {
       await save($, { ...p, history: await record($, p, 'exam') })
