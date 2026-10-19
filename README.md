@@ -6,33 +6,9 @@
 the right question, but it **cannot write your code**. A tool guard blocks every edit to
 your files while mentor mode is on. You type. You learn. It keeps score.
 
-```
-> /mentor socratic
-Mentor mode is on: socratic (answers with questions until the learner finds it).
-The agent will not write your code now. Climb the hint ladder with /mentor hint.
+![mentor-mode in Claude Code: the agent refuses to fix a bug and asks a question instead, a hint, the learner fixes it, a kata from the repo, a denied write to the kata solution, and the weekly card](docs/demo.gif)
 
-> my binary search never ends on [1, 3]
-
-  You said the loop stops when low > high. Pick target = 3 and walk through it:
-  what are low, high and mid after the first iteration?
-
-> low=0 high=1 mid=0... then low = mid, so low stays 0. oh.
-
-  What would have to be true about low after each step for the range to shrink?
-
-> /mentor hint
-Hint rung 2/4: concept.
-
-  This is the "loop invariant" idea: every iteration must make the search range
-  strictly smaller. In a search over pages of a book, "go to the middle page" only
-  works if you never re-open a page you already ruled out. Which line of yours
-  re-opens one?
-
-> low = mid + 1. it works.
-
-> /mentor done
-Solved on your own: 1. Hint ladder reset.
-```
+<sub>Redrawn from real Claude Code sessions with the plugin: prompts shortened, replies trimmed, nothing invented. Rebuild it with <code>python scripts/demo/make_gif.py</code>.</sub>
 
 Status line, always visible: `mentor socratic | hint 0/4 | solved 1 | reveals 0`
 
