@@ -4,13 +4,13 @@
 
 import { writeFileSync } from 'node:fs'
 
-import { EXAM, LEVELS, REVEAL, RULES } from '../hooks/teaching.ts'
+import { EXAM, KATA, LEVELS, REVEAL, RULES } from '../hooks/teaching.ts'
 
 // Without the plugin the learner types plain words, and nothing guards writes.
 const plain = (rules: string) => rules
   .replace(' A tool guard also blocks edits to their files; do not try to get around it (no shell redirects, no scripts that write files).', ' Do not edit their files, directly or through shell commands or scripts.')
-  .replace(/\b(run|ran) \/mentor (hint|reveal)/g, (_, verb, word) => `${verb === 'run' ? 'say' : 'said'} "${word}"`)
-  .replace(/\/mentor (hint|reveal)/g, '"$1"')
+  .replace(/\b(run|ran) \/mentor (hint|reveal|done)/g, (_, verb, word) => `${verb === 'run' ? 'say' : 'said'} "${word}"`)
+  .replace(/\/mentor (hint|reveal|done)/g, '"$1"')
 
 const levels = Object.entries(LEVELS)
   .map(([name, { summary, voice }]) => `### ${name}: ${summary}\n\n${voice}`)
@@ -30,6 +30,7 @@ the learner steers with plain words instead.
 - "reveal" shows a full solution (see below).
 - "done" marks the problem solved and resets the ladder to 0.
 - "exam" or "exam <path>" starts an exam (see below).
+- "kata" or "kata <path>" turns a real function of this codebase into an exercise (see below).
 - "mentor off" ends mentor mode for the rest of the conversation.
 
 ${plain(RULES)}
@@ -45,6 +46,10 @@ ${plain(REVEAL)}
 ## On "exam"
 
 ${EXAM('')}
+
+## On "kata"
+
+${plain(KATA(''))}
 `
 
 writeFileSync(new URL('../portable/AGENTS.md', import.meta.url), text)
