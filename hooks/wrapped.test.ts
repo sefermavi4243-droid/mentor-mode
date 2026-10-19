@@ -37,11 +37,13 @@ describe('the journal', () => {
 })
 
 describe('the week', () => {
-  const history = [at(0, 'hint'), at(0, 'solved'), at(1, 'solved'), at(1, 'reveal'), at(2, 'exam'), at(30, 'solved')]
+  const history = [
+    at(0, 'hint'), at(0, 'solved'), at(1, 'solved'), at(1, 'reveal'), at(2, 'exam'), at(2, 'kata'), at(30, 'solved'),
+  ]
   const week = summarize(history, parseJournal(JOURNAL), NOW)
 
   test('counts only the last seven days', () => {
-    expect([week.solved, week.hints, week.reveals, week.exams]).toEqual([2, 1, 1, 1])
+    expect([week.solved, week.hints, week.reveals, week.exams, week.katas]).toEqual([2, 1, 1, 1, 1])
     expect(week.from).toBe(dateOf(NOW - 6 * DAY))
     expect(week.to).toBe('2026-10-20')
   })

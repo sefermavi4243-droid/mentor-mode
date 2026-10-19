@@ -12,6 +12,7 @@ export type Week = {
   hints: number
   reveals: number
   exams: number
+  katas: number
   // Share of finished problems solved without a reveal; null with none finished.
   independence: number | null
   concepts: string[]
@@ -77,6 +78,7 @@ export function summarize(history: readonly Activity[], journal: readonly Journa
     hints: count('hint'),
     reveals,
     exams: count('exam'),
+    katas: count('kata'),
     independence: solved + reveals === 0 ? null : Math.round((solved / (solved + reveals)) * 100),
     concepts,
     streak,
@@ -111,8 +113,8 @@ export function renderCard(week: Week, repo: string): string {
     ['independence', week.independence === null ? '-' : `${week.independence}%`],
     ['hints taken', String(week.hints)],
     ['solutions revealed', String(week.reveals)],
+    ['katas', String(week.katas)],
     ['exams', String(week.exams)],
-    ['day streak', String(week.streak)],
   ]
   const chips = week.concepts.length > 0
     ? week.concepts.map(c => `<span class="chip">${escape(c)}</span>`).join('')
@@ -141,26 +143,29 @@ export function renderCard(week: Week, repo: string): string {
   .card {
     width: min(1200px, 100%); aspect-ratio: 1200 / 630; container-type: inline-size;
     background: radial-gradient(120% 140% at 0% 0%, #17202a 0%, var(--card) 55%);
-    border: 1px solid var(--line); border-radius: 28px; padding: 5cqw 5.5cqw;
-    display: grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: auto 1fr auto; gap: 2.5cqw 4cqw;
+    border: 1px solid var(--line); border-radius: 28px; padding: 4cqw 5cqw; overflow: hidden;
+    display: grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: auto 1fr auto; gap: 1.8cqw 4cqw;
   }
   .top { grid-column: 1 / -1; display: flex; justify-content: space-between; color: var(--dim); font-size: 1.5cqw; letter-spacing: .02em; }
   .top b { color: var(--text); font-weight: 600; }
   .hero { display: flex; flex-direction: column; justify-content: center; }
-  .big { font-size: 16cqw; line-height: .9; font-weight: 800; letter-spacing: -.04em; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .big { font-size: 13cqw; line-height: .9; font-weight: 800; letter-spacing: -.04em; color: var(--accent); font-variant-numeric: tabular-nums; }
   .line { font-size: 3cqw; font-weight: 600; margin-top: 1cqw; max-width: 22ch; }
   .chips { display: flex; flex-wrap: wrap; gap: .8cqw; margin-top: 2.5cqw; }
   .chip { font-size: 1.45cqw; padding: .55cqw 1.2cqw; border-radius: 999px; background: var(--accent-dim); color: var(--accent); }
   .chip.empty { background: transparent; border: 1px dashed var(--line); color: var(--dim); }
-  .side { display: flex; flex-direction: column; justify-content: center; gap: 2.4cqw; }
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6cqw 2cqw; }
-  .stat b { display: block; font-size: 4.2cqw; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .side { display: flex; flex-direction: column; justify-content: center; gap: 2cqw; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1cqw 2cqw; }
+  .stat b { display: block; font-size: 3.4cqw; font-weight: 700; font-variant-numeric: tabular-nums; }
   .stat span { color: var(--dim); font-size: 1.45cqw; }
   .stat:first-child { grid-column: 1 / -1; }
-  .stat:first-child b { font-size: 6cqw; }
+  .stat:first-child b { font-size: 5cqw; }
+  .streak { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: -1.4cqw; }
+  .streak b { font-size: 1.9cqw; font-weight: 700; color: var(--accent); }
+  .streak span { color: var(--dim); font-size: 1.3cqw; }
   .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: .8cqw; }
   .day { display: grid; gap: .5cqw; justify-items: center; color: var(--dim); font-size: 1.2cqw; }
-  .day i { width: 100%; aspect-ratio: 1; border-radius: .8cqw; background: #1a1f2b; border: 1px solid var(--line); }
+  .day i { width: 100%; aspect-ratio: 1.6; border-radius: .8cqw; background: #1a1f2b; border: 1px solid var(--line); }
   .day.on i { background: var(--accent); border-color: var(--accent); }
   .foot { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: end; color: var(--dim); font-size: 1.4cqw; border-top: 1px solid var(--line); padding-top: 1.8cqw; }
   .foot b { color: var(--text); font-size: 1.9cqw; }
@@ -176,6 +181,7 @@ export function renderCard(week: Week, repo: string): string {
   </section>
   <section class="side">
     <div class="stats">${stats.map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join('')}</div>
+    <div class="streak"><b>${week.streak}-day streak</b><span>last 7 days</span></div>
     <div class="days">${days}</div>
   </section>
   <div class="foot"><span>My coding agent teaches instead of writing my code.</span><b>${escape(repo)}</b></div>
