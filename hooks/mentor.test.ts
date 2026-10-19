@@ -9,7 +9,13 @@ const ROOT = 'C:/work/app'
 // The world beneath the plugin: a store, a project root, and a recorder for
 // the prompts the plugin submits and the tool calls that get through.
 function world(on: On, entries: Record<string, unknown> = {}) {
-  mock.store(on, entries)
+  // A store of our own rather than mock.store, so tests can read it back.
+  const store: Record<string, unknown> = JSON.parse(JSON.stringify(entries))
+  on('store.get', ($, e) => ({ value: store[e.key] }))
+  on('store.set', ($, e) => {
+    store[e.key] = JSON.parse(JSON.stringify(e.value))
+    return { value: undefined }
+  })
   const clock = mock.clock(on)
   const submitted: string[] = []
   const notes: string[] = []
@@ -25,7 +31,7 @@ function world(on: On, entries: Record<string, unknown> = {}) {
     ran.push(e.tool)
     return { result: 'ok' }
   })
-  return { submitted, notes, ran, clock }
+  return { submitted, notes, ran, clock, store }
 }
 
 // The kit fills in what the engine stamps (origin, presentation, wait).
@@ -80,6 +86,16 @@ describe('/mentor', () => {
     await clock.advance(1)
     expect(text).toContain('2/4')
     expect(submitted[1]).toContain('rung 2')
+  })
+
+  test('keeps a dated history of what happened', async ($, on) => {
+    const { clock, store } = world(on, ON)
+    await clock.set(Date.UTC(2026, 9, 20))
+    await mentor($, 'hint')
+    await mentor($, 'done')
+    const saved = store[`project:${ROOT}`] as { history: { at: number; kind: string }[] }
+    expect(saved.history.map(a => a.kind)).toEqual(['hint', 'solved'])
+    expect(saved.history[0]?.at).toBe(Date.UTC(2026, 9, 20))
   })
 
   test('a solved problem counts only without a reveal', async ($, on) => {

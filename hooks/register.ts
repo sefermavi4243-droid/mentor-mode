@@ -4,6 +4,10 @@ import { contract, DEFAULT_LEVEL, EXAM, LEVELS, REVEAL, RUNGS } from './teaching
 import type { Level } from './teaching'
 import { isMentorPath, writesFiles } from './guard'
 
+export type ActivityKind = 'hint' | 'reveal' | 'solved' | 'exam'
+
+export type Activity = { at: number; kind: ActivityKind }
+
 type Progress = {
   isOn: boolean
   level: Level
@@ -11,9 +15,17 @@ type Progress = {
   hints: number
   reveals: number
   solved: number
+  history: Activity[]
 }
 
-const OFF: Progress = { isOn: false, level: DEFAULT_LEVEL, rung: 0, hints: 0, reveals: 0, solved: 0 }
+const OFF: Progress = { isOn: false, level: DEFAULT_LEVEL, rung: 0, hints: 0, reveals: 0, solved: 0, history: [] }
+
+// Enough for months of daily use; the store holds 4 MiB in all.
+const HISTORY_LIMIT = 2000
+
+async function record($: EngineInterface, p: Progress, kind: ActivityKind): Promise<Activity[]> {
+  return [...p.history, { at: await $.clock.now(), kind }].slice(-HISTORY_LIMIT)
+}
 
 const USAGE = [
   'Usage: /mentor [on|off|guide|socratic|reviewer|strict|hint|reveal|done|exam [path]|status]',
@@ -109,18 +121,23 @@ export const register: Register = on => {
       if (p.rung >= RUNGS.length) {
         return { text: 'You are on the last rung. Try it, or run /mentor reveal to see a full solution.' }
       }
-      const next = await save($, { ...p, rung: p.rung + 1, hints: p.hints + 1 })
+      const next = await save($, { ...p, rung: p.rung + 1, hints: p.hints + 1, history: await record($, p, 'hint') })
       ask(`Give me the rung ${next.rung} hint (${RUNGS[next.rung - 1]}) for what I am stuck on.`)
       return { text: `Hint rung ${next.rung}/${RUNGS.length}: ${rungName(next.rung - 1)}.` }
     }
     if (verb === 'reveal') {
-      await save($, { ...p, rung: RUNGS.length, reveals: p.reveals + 1 })
+      await save($, { ...p, rung: RUNGS.length, reveals: p.reveals + 1, history: await record($, p, 'reveal') })
       ask(REVEAL)
       return { text: 'Revealing the solution. It counts on your scoreboard; retype it from memory afterwards.' }
     }
     if (verb === 'done') {
       const isOwn = p.rung < RUNGS.length
-      const next = await save($, { ...p, rung: 0, solved: p.solved + (isOwn ? 1 : 0) })
+      const next = await save($, {
+        ...p,
+        rung: 0,
+        solved: p.solved + (isOwn ? 1 : 0),
+        history: isOwn ? await record($, p, 'solved') : p.history,
+      })
       ask('I solved it. Ask me to explain my solution in two sentences, then add the journal entry.')
       return {
         text: isOwn
@@ -129,6 +146,7 @@ export const register: Register = on => {
       }
     }
     if (verb === 'exam') {
+      await save($, { ...p, history: await record($, p, 'exam') })
       ask(EXAM(rest.join(' ')))
       return { text: 'Exam time: three questions, no hints.' }
     }
