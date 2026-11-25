@@ -1,0 +1,23 @@
+name: portable
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  in-sync:
+    name: portable/AGENTS.md matches hooks/teaching.ts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run build:portable
+      - name: Fail if the generated file changed
+        run: |
+          if ! git diff --exit-code -- portable/AGENTS.md; then
+            echo "::error file=portable/AGENTS.md::Out of date. Run 'npm run build:portable' and commit the result."
+            exit 1
+          fi
